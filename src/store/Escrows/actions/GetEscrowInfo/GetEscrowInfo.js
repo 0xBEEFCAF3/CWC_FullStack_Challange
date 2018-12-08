@@ -1,23 +1,23 @@
-export const ESCROW_STATUS_START = `GET_ESCROW_INFO_STATUS_START`;
-export const ESCROW_STATUS_SUCCESS = "GET_ESCROW_INFO_STATUS_SUCCESS";
-export const ESCROW_STATUS_FAILURE = "GET_ESCROW_INFO_STATUS_FAILURE";
+export const GET_ESCROW_INFO_START = `GET_ESCROW_INFO_START`;
+export const GET_ESCROW_INFO_SUCCESS = "GET_ESCROW_INFO_SUCCESS";
+export const GET_ESCROW_INFO_FAILURE = "GET_ESCROW_INFO_FAILURE";
 
 const getStatusStart = () => ({
-  type: ESCROW_STATUS_START,
+  type: GET_ESCROW_INFO_START,
 });
 
 const getStatusSuccess = (payload) => ({
-  type: ESCROW_STATUS_SUCCESS,
+  type: GET_ESCROW_INFO_SUCCESS,
   payload,
 });
 
 const getStatusFailure = (error) => ({
-  type: ESCROW_STATUS_FAILURE,
+  type: GET_ESCROW_INFO_FAILURE,
   error,
 });
 
 
-export const escrows = (escrow) => {
+export const getEscrowInfo = (escrow) => {
   return (dispatch , getState) => {
   		dispatch(getStatusStart());
     	//make api call

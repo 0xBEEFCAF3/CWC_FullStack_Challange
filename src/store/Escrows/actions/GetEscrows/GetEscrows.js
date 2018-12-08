@@ -18,8 +18,8 @@ const getStatusFailure = (error) => ({
 });
 
 
-export const escrows = () => {
-  return (dispatch , getState) => {
+export const getEscrows = () => {
+  return (dispatch) => {
   		dispatch(getStatusStart());
     	//make api call
     	let data = [

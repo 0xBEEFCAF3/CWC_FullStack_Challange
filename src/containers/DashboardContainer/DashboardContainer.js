@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import {findDOMNode} from 'react-dom'
 import { connect } from 'react-redux';
 import ReactModal from 'react-modal';
-
+import EscrowTable from '../../components/EscrowTable'
+import EscrowModal from '../../components/EscrowModal'
 
 import {
   CloseIcon,
@@ -66,12 +67,12 @@ class DashboardContainer extends Component {
         <div className={`col-12`} style={{'height':'100vh'}}>
           <DashboardBody className={`row`}>
             <div className={`col-12`}>
-            
             </div>
           </DashboardBody>
         </div>
+        <EscrowTable />
         <FooterWrapper>
-          <div className={`col-lg-6 col-sm-12`} style={{'border-right': '2px solid white'}}>
+          <div className={`col-lg-6 col-sm-12`} style={{'borderRight': '2px solid white'}}>
             <FooterHeader>
             </FooterHeader>
             <FooterBody>
