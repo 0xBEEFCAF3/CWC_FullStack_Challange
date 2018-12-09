@@ -62,15 +62,12 @@ class DashboardContainer extends Component {
     return (
       <DashboardWrapper className={`row`}>
           {this.renderReactModal()}
-        <DashboardCover className={`col-12`} style={{'display': 'inherit'}}>
-        </DashboardCover>
-        <div className={`col-12`} style={{'height':'100vh'}}>
+        <div className={`col-12`} >
           <DashboardBody className={`row`}>
-            <div className={`col-12`}>
-            </div>
+            <EscrowTable />
           </DashboardBody>
         </div>
-        <EscrowTable />
+        
         <FooterWrapper>
           <div className={`col-lg-6 col-sm-12`} style={{'borderRight': '2px solid white'}}>
             <FooterHeader>
