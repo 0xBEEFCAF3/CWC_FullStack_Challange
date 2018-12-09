@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import escrowActions from '../../store/Escrows/actions'
 import Table from 'react-bootstrap/lib/Table';
+import { FaCaretDown, FaCaretUp} from 'react-icons/fa'
 
 import {
   COLOR_NEGATIVE,
@@ -20,13 +21,12 @@ class EscrowTable extends Component {
   }
 
   tick() {
-            this.setState(prevState => ({
-              seconds: prevState.seconds + 1
-            }));
+    this.setState(prevState => ({
+      seconds: prevState.seconds + 1
+      }));
   }
 
   componentDidMount(){
-    console.log("mounts: ", this.props)
     this.props.getEscrows();
   }
 
@@ -34,11 +34,20 @@ class EscrowTable extends Component {
     if(this.state.escrows == null ){
       this.setState({'escrows':this.props.Escrows.Escrows.escrows })
       console.log("did update:" + JSON.stringify(this.state));
-      this.interval = setInterval(() => this.tick(), 1000);
+      this.startTicking();
     }
   }
-  componentWillUnmount() {
+
+  startTicking = () =>{
+    this.interval = setInterval(() => this.tick(), 1000);
+  }
+
+  stopTicking = () => {
     clearInterval(this.interval);
+  }
+
+  componentWillUnmount() {
+    this.stopTicking();
   }
 
   toTitleCase = (str) => {
@@ -48,7 +57,22 @@ class EscrowTable extends Component {
                 return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
             }
         );
+  }
+
+  filterTable = (col) =>{
+    this.stopTicking();
+    console.log(this.state.escrows);
+    let sortedEscrows = this.state.escrows;
+    if(col == "balance"){
+      sortedEscrows.sort((a,b) => (a["amountTotal"] - a["amountTraded"] > b["amountTotal"] - b["amountTraded"]) ? 1 : ((b["amountTotal"] - b["amountTraded"] > a["amountTotal"] - a["amountTraded"]) ? -1 : 0)); 
+    }else{
+      sortedEscrows.sort((a,b) => (a[col] > b[col]) ? 1 : ((b[col] > a[col]) ? -1 : 0)); 
     }
+    this.setState({'escrows':sortedEscrows}); 
+    console.log(this.state.escrows);
+
+    this.startTicking();
+  }
 
   renderTableBody = () => {
     if(this.state.escrows == null){
@@ -92,14 +116,15 @@ class EscrowTable extends Component {
   }
 
   render() {
+    let _this = this;
     return(
       <Table style={esTable} striped bordered hover>
           <thead>
             <tr>
-              <th>Asset</th>
-              <th>Available Balance </th>
-              <th>Exchange</th>
-              <th>Expires in</th>
+              <th>Asset <FaCaretDown onClick={()=> _this.filterTable("asset") } /></th>
+              <th>Available Balance <FaCaretDown onClick={()=> _this.filterTable("balance") } /> </th>
+              <th>Exchange <FaCaretDown onClick={()=> _this.filterTable("exchangeId") } /> </th>
+              <th>Expires in <FaCaretDown onClick={()=> _this.filterTable("expirationTime") } /> </th>
             </tr>
           </thead>
           <tbody>
