@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 import escrowActions from '../../store/Escrows/actions'
 import Table from 'react-bootstrap/lib/Table';
 import { FaCaretDown, FaCaretUp} from 'react-icons/fa'
+import EscrowModal from './../EscrowModal'
+
 
 import {
   COLOR_NEGATIVE,
@@ -17,6 +19,8 @@ class EscrowTable extends Component {
     this.state = {
       escrows: null,
       seconds:0,
+      currentModal:null,
+      exchangeId:null,
     }
   }
 
@@ -61,7 +65,6 @@ class EscrowTable extends Component {
 
   filterTable = (col) =>{
     this.stopTicking();
-    console.log(this.state.escrows);
     let sortedEscrows = this.state.escrows;
     if(col == "balance"){
       sortedEscrows.sort((a,b) => (a["amountTotal"] - a["amountTraded"] > b["amountTotal"] - b["amountTraded"]) ? 1 : ((b["amountTotal"] - b["amountTraded"] > a["amountTotal"] - a["amountTraded"]) ? -1 : 0)); 
@@ -69,9 +72,31 @@ class EscrowTable extends Component {
       sortedEscrows.sort((a,b) => (a[col] > b[col]) ? 1 : ((b[col] > a[col]) ? -1 : 0)); 
     }
     this.setState({'escrows':sortedEscrows}); 
-    console.log(this.state.escrows);
 
     this.startTicking();
+  }
+
+  updateModal = (exchangeId) =>{
+    this.stopTicking();
+    this.setState({exchangeId: exchangeId})
+  }
+
+  setExchangeId = (exchangeId) =>{
+    this.setState({exchangeId: exchangeId});
+  }
+
+  closeModal = () =>{
+    this.setExchangeId(null);
+    this.startTicking();
+  }
+
+  renderModal = () =>{
+    if(this.state.exchangeId != null){
+      return (<EscrowModal closeModal={this.closeModal} exchangeId={this.state.exchangeId} />);
+    }
+    else{
+      return <span />;
+    }
   }
 
   renderTableBody = () => {
@@ -105,7 +130,7 @@ class EscrowTable extends Component {
 
 
       return (
-        <tr>
+        <tr onClick={() =>{this.updateModal(row["exchangeId"])}}>
           <td><img src={require('./'+row["asset"].toUpperCase()+'_icon.png')} /></td>
           <td>{balance} {row["asset"].toUpperCase()} <p> <small> {row["amountTraded"]} of {row["amountTotal"]} {row["asset"].toUpperCase()} traded </small></p> </td>
           <td>{_this.toTitleCase(row["exchangeId"])}</td>
@@ -118,6 +143,10 @@ class EscrowTable extends Component {
   render() {
     let _this = this;
     return(
+    <div>
+      <div>
+       {this.renderModal()}
+      </div>
       <Table style={esTable} striped bordered hover>
           <thead>
             <tr>
@@ -131,6 +160,7 @@ class EscrowTable extends Component {
             {this.renderTableBody()}
           </tbody>
       </Table>
+    </div>
     )
   } 
 }

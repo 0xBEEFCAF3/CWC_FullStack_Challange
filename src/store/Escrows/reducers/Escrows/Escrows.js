@@ -9,7 +9,6 @@ const initialState = {
 const escrows = (state = initialState, action) => {
   switch (action.type) {
     case escrowActions.ESCROW_STATUS_SUCCESS:
-      console.log("caushg tit ");
       return {
         ...state,
         escrows: action.payload,

@@ -17,7 +17,7 @@ const getStatusFailure = (error) => ({
 });
 
 
-export const getEscrowInfo = (escrow) => {
+export const getEscrowInfo = (escrowId) => {
   return (dispatch , getState) => {
   		dispatch(getStatusStart());
     	//make api call
@@ -69,7 +69,7 @@ export const getEscrowInfo = (escrow) => {
       "lengthMax":604800
    }
 ];
-      dispatch(getStatusSuccess(data))
-
+    data = data.filter(escrow => escrow.exchangeId === escrowId);
+    dispatch(getStatusSuccess(data))
   };
 };
