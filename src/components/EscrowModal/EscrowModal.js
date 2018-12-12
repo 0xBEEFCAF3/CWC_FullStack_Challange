@@ -16,6 +16,8 @@ import {
 import {
  COLOR_POSITIVE,
  COLOR_NEGATIVE,
+ COLOR_DARK_GREY,
+
 } from '../../theme';
 
 class EscrowModal extends Component {
@@ -28,16 +30,24 @@ class EscrowModal extends Component {
       datePicked: new Date(),
       amountValidationColor:null,
       dateValidationColor: null,
+      globalEscrowInfo: null,
+      buttonValidationColor: null,
     }
   }
 
   componentDidMount(){
+
     this.props.getEscrowInfo(this.props.exchangeId);
+    this.props.getEscrows();
   }
 
   componentDidUpdate(prevProps){
     if(this.state.escrowInfo == null){
       this.setState({escrowInfo:this.props.escrowInfo[0]});
+    }
+
+    if(this.state.globalEscrowInfo == null){
+      this.setState({globalEscrowInfo: this.props.globalEscrowInfo});
     }
   }
 
@@ -58,7 +68,8 @@ class EscrowModal extends Component {
     if (amountValidation){
       this.setState({amountValidationColor: COLOR_POSITIVE});
     }else{
-      this.setState({amountValidationColor: COLOR_NEGATIVE});
+      this.setState({amountValidationColor: COLOR_NEGATIVE,
+      buttonValidationColor: COLOR_NEGATIVE});
       return false;
     }
 
@@ -73,10 +84,14 @@ class EscrowModal extends Component {
     if (dateValidation){
       this.setState({dateValidationColor: COLOR_POSITIVE});
     }else{
-      this.setState({dateValidationColor: COLOR_NEGATIVE});
+      this.setState({dateValidationColor: COLOR_NEGATIVE,
+        buttonValidationColor: COLOR_NEGATIVE});
       return false;
     }
 
+
+    //two fields have passed validation tests
+    this.setState({buttonValidationColor: COLOR_POSITIVE});
     return true;
   }
 
@@ -106,6 +121,50 @@ class EscrowModal extends Component {
     );
   }
 
+  toTitleCase = (str) => {
+        return str.replace(
+            /\w\S*/g,
+            function(txt) {
+                return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+            }
+        );
+  }
+
+  renderEscrowInfo = () =>{
+    let _this = this;
+    let currExchangeId = this.state.escrowInfo.exchangeId;
+    let selectedEscrow = this.state.globalEscrowInfo.filter((escrow => escrow.exchangeId == currExchangeId))[0];
+    let balance = selectedEscrow["amountTotal"] - selectedEscrow["amountTraded"];
+      //calculate the time to expired
+      let dateNow = new Date();
+      let expDate = new Date(selectedEscrow["expirationTime"] * 1000);
+
+      let delta = Math.abs(expDate - dateNow) / 1000;
+
+      let days = Math.floor(delta / 86400);
+      delta -= days * 86400;
+
+      let hours = Math.floor(delta / 3600) % 24;
+      delta -= hours * 3600;
+
+      let minutes = Math.floor(delta / 60) % 60;
+      delta -= minutes * 60;
+      let seconds = parseInt( delta % 60);
+      let timeUrgency = {};
+      if(days <= 1){
+         timeUrgency = {'color':COLOR_NEGATIVE};
+      }else{
+        timeUrgency = {'color':COLOR_POSITIVE};
+      }
+
+    return(<div>
+          <span><img src={require('../EscrowTable/'+selectedEscrow["asset"].toUpperCase()+'_icon.png')} /></span> 
+          <span> {balance} {selectedEscrow["asset"].toUpperCase()}  <small> {selectedEscrow["amountTraded"]} of {selectedEscrow["amountTotal"]} {selectedEscrow["asset"].toUpperCase()} traded </small> </span>
+          <span>{_this.toTitleCase(selectedEscrow["exchangeId"])} </span> 
+          <span style={timeUrgency}>{days} DAYS |  {hours} HOURS | {minutes} MINUTES | {seconds} SECONDS</span> 
+        </div>);
+  }
+
   renderBody = () =>{
     let _this = this;
     if(this.state.escrowInfo == null) return (<p>"Loading ..." </p>);    
@@ -115,8 +174,7 @@ class EscrowModal extends Component {
 
       <form>
           <FormGroup
-            controlId="formBasicText"
-          >
+            controlId="formBasicText">
             <ControlLabel>User Escrow paying fee</ControlLabel>
             <FormControl
               type="text"
@@ -155,7 +213,13 @@ class EscrowModal extends Component {
           />
           <FormControl.Feedback />
         </FormGroup>
-      </form>);
+
+        {this.renderEscrowInfo()}
+
+        <Button onClick={this.requestEscrow} style={{'cursor':'pointer', backgroundColor: this.state.buttonValidationColor}}> Request Escrow </Button>
+      </form>
+      
+      );
 
   }
 
@@ -167,13 +231,18 @@ class EscrowModal extends Component {
           onRequestClose={() => this.setModalBody(null)}
           style={{
             content : {
-              backgroundColor: 'transparent',
+              backgroundColor: COLOR_DARK_GREY,
               border: 'none',
+              width: "900px",
+              color: "white",
+
             }
+
           }}
         >
           <Button onClick={() => this.props.closeModal()} style={{'cursor':'pointer', 'float':'right'}}> Close </Button>
           <br />
+          <h1> New Escrow </h1>
           {this.renderBody()}
         </ReactModal>
         );
@@ -199,7 +268,9 @@ class EscrowModal extends Component {
 export default connect((store) => {
   return {
     escrowInfo: store.Escrows.Escrows.escrowInfo,
+    globalEscrowInfo: store.Escrows.Escrows.escrows,
   }
 }, {
     getEscrowInfo: escrowActions.getEscrowInfo,
+    getEscrows: escrowActions.getEscrows,
 })(EscrowModal);
