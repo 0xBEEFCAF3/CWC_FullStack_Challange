@@ -13,10 +13,10 @@ import {
   Modal,
   ModalBody,
 } from './EscrowModal.styles.js';
-
 import {
-  CloseIcon,
-} from '../../containers/DashboardContainer/DashboardContainer.styles';
+ COLOR_POSITIVE,
+ COLOR_NEGATIVE,
+} from '../../theme';
 
 class EscrowModal extends Component {
 
@@ -26,6 +26,8 @@ class EscrowModal extends Component {
       modalBody : "Loading...",
       escrowInfo: null,
       datePicked: new Date(),
+      amountValidationColor:null,
+      dateValidationColor: null,
     }
   }
 
@@ -43,20 +45,48 @@ class EscrowModal extends Component {
     this.setState({modalBody:body});
   }
 
-  getValidationState() {
-    const length = 11;
-    if (length > 10) return 'success';
-    else if (length > 5) return 'warning';
-    else if (length > 0) return 'error';
-    return null;
+  getValidationState = () =>{
+    if(this.state.escrowInfo == null || this.userAmount == null){
+      return null;
+    }
+    /*Validating the user amount*/
+    const amountMax = parseInt(this.state.escrowInfo.amountMax);
+    const amountMin = parseInt(this.state.escrowInfo.amountMin);
+    const userAmount = parseInt(this.userAmount.value);
+    const amountValidation = (userAmount > amountMax || userAmount < amountMin);
+
+    if (amountValidation){
+      this.setState({amountValidationColor: COLOR_POSITIVE});
+    }else{
+      this.setState({amountValidationColor: COLOR_NEGATIVE});
+      return false;
+    }
+
+    /*Validating the date picked by the user*/
+    const ts = Math.round((new Date()).getTime() / 1000);
+    const dateOfTransaction = new Date(this.userDate.value);
+    const minDate = new Date((this.state.escrowInfo.lengthMin + ts) * 1000);
+    const maxDate = new Date((this.state.escrowInfo.lengthMax + ts) * 1000);
+    const dateValidation = (dateOfTransaction < maxDate && dateOfTransaction > minDate);  
+    console.log("THIS DATE:::: ", dateValidation, dateOfTransaction, minDate, maxDate, this.state.escrowInfo.lengthMin+ ts);
+
+    if (dateValidation){
+      this.setState({dateValidationColor: COLOR_POSITIVE});
+    }else{
+      this.setState({dateValidationColor: COLOR_NEGATIVE});
+      return false;
+    }
+
+    return true;
   }
 
-  changeDropDown = (e) =>{
-    console.log(e);
-    this.setState({ assetPicked: e });
+  changeDropDown = (asset) =>{
+    console.log(asset);
+    this.setState({ assetPicked: this.dropdownSelect.value });
   }
 
   changeDate = (date) =>{
+    this.getValidationState();
     this.setState({
       datePicked : date,
     })
@@ -64,31 +94,29 @@ class EscrowModal extends Component {
 
   renderDropDown = () => {
     return (
-      <DropdownButton
-        bsStyle= "primary"
-        title="Available Assets"
-        id={`dropdown-basic`}
-        onSelect={this.changeDropDown}
-      >
+      <FormControl 
+              onChange={this.changeDropDown.bind(this)}
+              inputRef={ el => this.dropdownSelect=el }
+              componentClass="select" placeholder="select">
+
       {this.state.escrowInfo.availableAssets.map((asset) =>{
-        return <MenuItem>{asset}</MenuItem>
+        return <option value="asset">{asset}</option>
       })}
-      </DropdownButton>
+      </FormControl>
     );
   }
 
   renderBody = () =>{
-    if(this.state.escrowInfo == null){
-      return(<p> Loading... </p>);
-    }
-    console.log(this.state.escrowInfo);
+    let _this = this;
+    if(this.state.escrowInfo == null) return (<p>"Loading ..." </p>);    
     let amountMin = this.state.escrowInfo.amountMin;
+    //validationState={this.getValidationState()}
     return(
 
       <form>
           <FormGroup
             controlId="formBasicText"
-            validationState={this.getValidationState()}>
+          >
             <ControlLabel>User Escrow paying fee</ControlLabel>
             <FormControl
               type="text"
@@ -98,12 +126,16 @@ class EscrowModal extends Component {
             <FormControl.Feedback />
             <HelpBlock>This field is non adjustable</HelpBlock>
         <br />
+        <ControlLabel>Asset</ControlLabel>
         {this.renderDropDown()}
         <br />
         
           <ControlLabel>Amount</ControlLabel>
           <FormControl
             type="number"
+            inputRef={ el => this.userAmount=el}
+            onChange={this.getValidationState}
+            style={{backgroundColor: this.state.amountValidationColor}}
           />
           <FormControl.Feedback />
         <br />
@@ -114,10 +146,12 @@ class EscrowModal extends Component {
           <FormControl.Feedback />
         <br />
   
-          <ControlLabel>Expires on</ControlLabel>
-          <DatePicker 
-            selected={this.state.datePicked} 
-            onChange={this.changeDate}
+          <ControlLabel>Expires on</ControlLabel> <br />
+          <FormControl 
+            type="date"
+            inputRef={ el => this.userDate=el}
+            onChange={this.getValidationState}
+            style={{backgroundColor: this.state.dateValidationColor}}
           />
           <FormControl.Feedback />
         </FormGroup>
