@@ -35,7 +35,7 @@ class EscrowTable extends Component {
   }
 
   componentDidUpdate(prevProps){
-    if(this.state.escrows == null ){
+    if(this.state.escrows == null || this.state.escrows != this.props.Escrows.Escrows.escrows){
       this.setState({'escrows':this.props.Escrows.Escrows.escrows })
       console.log("did update:" + JSON.stringify(this.state));
       this.startTicking();
@@ -88,6 +88,8 @@ class EscrowTable extends Component {
   closeModal = () =>{
     this.setExchangeId(null);
     this.startTicking();
+    this.props.getEscrows();
+    
   }
 
   renderModal = () =>{
@@ -127,7 +129,6 @@ class EscrowTable extends Component {
       }else{
         timeUrgency = {'color':COLOR_POSITIVE};
       }
-
 
       return (
         <tr onClick={() =>{this.updateModal(row["exchangeId"])}}>

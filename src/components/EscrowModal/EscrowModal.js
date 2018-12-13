@@ -36,7 +36,7 @@ class EscrowModal extends Component {
   }
 
   componentDidMount(){
-
+    console.log("from did mount", this.props);
     this.props.getEscrowInfo(this.props.exchangeId);
     this.props.getEscrows();
   }
@@ -49,6 +49,25 @@ class EscrowModal extends Component {
     if(this.state.globalEscrowInfo == null){
       this.setState({globalEscrowInfo: this.props.globalEscrowInfo});
     }
+  }
+
+  requestEscrow = () =>{
+
+    let _this = this;
+    let selectedEscrow = this.state.globalEscrowInfo.filter((escrow => escrow.exchangeId == _this.props.exchangeId))[0];
+
+    let params = {
+      "exchangeId" : this.props.exchangeId,
+      "asset" : this.dropdownSelect.value,
+      "amountTraded" : parseInt(this.userAmount.value),
+      "amountTotal" : selectedEscrow.amountTotal,
+      "expirationTime" : (new Date(this.userDate.value).getTime() / 1000),
+      };
+      //add to global store
+      this.props.addEscrow([params]);
+      //close modal
+      this.props.closeModal();
+
   }
 
   setModalBody = (body) =>{
@@ -96,7 +115,6 @@ class EscrowModal extends Component {
   }
 
   changeDropDown = (asset) =>{
-    console.log(asset);
     this.setState({ assetPicked: this.dropdownSelect.value });
   }
 
@@ -115,7 +133,7 @@ class EscrowModal extends Component {
               componentClass="select" placeholder="select">
 
       {this.state.escrowInfo.availableAssets.map((asset) =>{
-        return <option value="asset">{asset}</option>
+        return <option value={asset}>{asset}</option>
       })}
       </FormControl>
     );
@@ -171,18 +189,11 @@ class EscrowModal extends Component {
     let amountMin = this.state.escrowInfo.amountMin;
     //validationState={this.getValidationState()}
     return(
-
       <form>
           <FormGroup
             controlId="formBasicText">
-            <ControlLabel>User Escrow paying fee</ControlLabel>
-            <FormControl
-              type="text"
-              value={amountMin}
-              disabled
-            />
-            <FormControl.Feedback />
-            <HelpBlock>This field is non adjustable</HelpBlock>
+            <ControlLabel>User Escrow for paying fee</ControlLabel>
+            {this.renderEscrowInfo()}
         <br />
         <ControlLabel>Asset</ControlLabel>
         {this.renderDropDown()}
@@ -213,9 +224,6 @@ class EscrowModal extends Component {
           />
           <FormControl.Feedback />
         </FormGroup>
-
-        {this.renderEscrowInfo()}
-
         <Button onClick={this.requestEscrow} style={{'cursor':'pointer', backgroundColor: this.state.buttonValidationColor}}> Request Escrow </Button>
       </form>
       
@@ -235,9 +243,7 @@ class EscrowModal extends Component {
               border: 'none',
               width: "900px",
               color: "white",
-
             }
-
           }}
         >
           <Button onClick={() => this.props.closeModal()} style={{'cursor':'pointer', 'float':'right'}}> Close </Button>
@@ -266,6 +272,7 @@ class EscrowModal extends Component {
 }
 
 export default connect((store) => {
+  console.log(escrowActions);
   return {
     escrowInfo: store.Escrows.Escrows.escrowInfo,
     globalEscrowInfo: store.Escrows.Escrows.escrows,
@@ -273,4 +280,5 @@ export default connect((store) => {
 }, {
     getEscrowInfo: escrowActions.getEscrowInfo,
     getEscrows: escrowActions.getEscrows,
+    addEscrow: escrowActions.addEscrow,
 })(EscrowModal);

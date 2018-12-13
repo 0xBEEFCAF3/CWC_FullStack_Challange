@@ -18,6 +18,11 @@ const escrows = (state = initialState, action) => {
         ...state,
         escrowInfo: action.payload,
       }
+    case escrowActions.ADD_ESCROW_SUCCESS:
+      return { 
+        ...state,
+        escrows: state.escrows.concat(action.payload)
+      }
     default:
       return state;
   }

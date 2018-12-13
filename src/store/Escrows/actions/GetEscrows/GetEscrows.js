@@ -19,7 +19,8 @@ const getStatusFailure = (error) => ({
 
 
 export const getEscrows = () => {
-  return (dispatch) => {
+  return (dispatch, getState) => {
+      let state = getState();
   		dispatch(getStatusStart());
     	//make api call
     	let data = [
@@ -93,6 +94,14 @@ export const getEscrows = () => {
       "amountTraded":14657000,
       "expirationTime":1547235275
    }];
-    	dispatch(getStatusSuccess(data));
+   console.log("redux state:", getState());
+    let results;
+    if(getState().Escrows.Escrows.escrows.length == 0){
+      results = data;      
+    }else{
+      results = getState().Escrows.Escrows.escrows;
+    }
+
+    dispatch(getStatusSuccess(results));
+    }
   };
-};
