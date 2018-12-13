@@ -94,7 +94,6 @@ export const getEscrows = () => {
       "amountTraded":14657000,
       "expirationTime":1547235275
    }];
-   console.log("redux state:", getState());
     let results;
     if(getState().Escrows.Escrows.escrows.length == 0){
       results = data;      

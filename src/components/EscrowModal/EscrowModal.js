@@ -6,7 +6,8 @@ import DatePicker from "react-datepicker";
 import {FaCalendar } from 'react-icons/fa'
 import "react-datepicker/dist/react-datepicker.css";
 
-import { Button, FormGroup, ControlLabel, FormControl, HelpBlock, DropdownButton, MenuItem, Label} from 'react-bootstrap';
+import { Button, FormGroup, ControlLabel, FormControl, HelpBlock, DropdownButton, MenuItem, Label } from 'react-bootstrap';
+import { Container, Row, Col } from 'reactstrap';
 import {
   Wrapper,
   Title,
@@ -17,7 +18,6 @@ import {
  COLOR_POSITIVE,
  COLOR_NEGATIVE,
  COLOR_DARK_GREY,
-
 } from '../../theme';
 
 class EscrowModal extends Component {
@@ -32,11 +32,12 @@ class EscrowModal extends Component {
       dateValidationColor: null,
       globalEscrowInfo: null,
       buttonValidationColor: null,
+      walletAddressValidationColor:null,
     }
   }
 
   componentDidMount(){
-    console.log("from did mount", this.props);
+    // console.log("from did mount", this.props);
     this.props.getEscrowInfo(this.props.exchangeId);
     this.props.getEscrows();
   }
@@ -52,6 +53,10 @@ class EscrowModal extends Component {
   }
 
   requestEscrow = () =>{
+    //check validation
+    if(this.getValidationState() !== true){
+      return null;
+    }
 
     let _this = this;
     let selectedEscrow = this.state.globalEscrowInfo.filter((escrow => escrow.exchangeId == _this.props.exchangeId))[0];
@@ -87,9 +92,7 @@ class EscrowModal extends Component {
     if (amountValidation){
       this.setState({amountValidationColor: COLOR_POSITIVE});
     }else{
-      this.setState({amountValidationColor: COLOR_NEGATIVE,
-      buttonValidationColor: COLOR_NEGATIVE});
-      return false;
+      this.setState({amountValidationColor: COLOR_NEGATIVE});
     }
 
     /*Validating the date picked by the user*/
@@ -98,18 +101,27 @@ class EscrowModal extends Component {
     const minDate = new Date((this.state.escrowInfo.lengthMin + ts) * 1000);
     const maxDate = new Date((this.state.escrowInfo.lengthMax + ts) * 1000);
     const dateValidation = (dateOfTransaction < maxDate && dateOfTransaction > minDate);  
-    console.log("THIS DATE:::: ", dateValidation, dateOfTransaction, minDate, maxDate, this.state.escrowInfo.lengthMin+ ts);
 
     if (dateValidation){
       this.setState({dateValidationColor: COLOR_POSITIVE});
     }else{
-      this.setState({dateValidationColor: COLOR_NEGATIVE,
-        buttonValidationColor: COLOR_NEGATIVE});
+      this.setState({dateValidationColor: COLOR_NEGATIVE});
+    }
+    /*Validating wallet address*/
+    const walletAddress = this.walletAddress.value;
+    const walletAddressValidation = walletAddress != "" ;
+    if (walletAddressValidation){
+      this.setState({walletAddressValidationColor: COLOR_POSITIVE});
+    }else{
+      this.setState({walletAddressValidationColor: COLOR_NEGATIVE});
+    }
+
+    if(!(walletAddressValidation && dateValidation && amountValidation)){
+      this.setState({buttonValidationColor: COLOR_NEGATIVE});
       return false;
     }
 
-
-    //two fields have passed validation tests
+    //all fields have passed validation tests
     this.setState({buttonValidationColor: COLOR_POSITIVE});
     return true;
   }
@@ -165,9 +177,6 @@ class EscrowModal extends Component {
       let hours = Math.floor(delta / 3600) % 24;
       delta -= hours * 3600;
 
-      let minutes = Math.floor(delta / 60) % 60;
-      delta -= minutes * 60;
-      let seconds = parseInt( delta % 60);
       let timeUrgency = {};
       if(days <= 1){
          timeUrgency = {'color':COLOR_NEGATIVE};
@@ -179,56 +188,77 @@ class EscrowModal extends Component {
           <span><img src={require('../EscrowTable/'+selectedEscrow["asset"].toUpperCase()+'_icon.png')} /></span> 
           <span> {balance} {selectedEscrow["asset"].toUpperCase()}  <small> {selectedEscrow["amountTraded"]} of {selectedEscrow["amountTotal"]} {selectedEscrow["asset"].toUpperCase()} traded </small> </span>
           <span>{_this.toTitleCase(selectedEscrow["exchangeId"])} </span> 
-          <span style={timeUrgency}>{days} DAYS |  {hours} HOURS | {minutes} MINUTES | {seconds} SECONDS</span> 
+          <span style={timeUrgency}>{days} DAYS |  {hours} HOURS </span> 
         </div>);
   }
 
   renderBody = () =>{
+    let containerStyling = {width:'75%'};
     let _this = this;
     if(this.state.escrowInfo == null) return (<p>"Loading ..." </p>);    
     let amountMin = this.state.escrowInfo.amountMin;
-    //validationState={this.getValidationState()}
     return(
+    <Container style={containerStyling}>
       <form>
-          <FormGroup
-            controlId="formBasicText">
+        <Row>
+          <Col>
+          <FormGroup>
             <ControlLabel>User Escrow for paying fee</ControlLabel>
             {this.renderEscrowInfo()}
+          </FormGroup>
+          </Col>
+        </Row>
         <br />
-        <ControlLabel>Asset</ControlLabel>
-        {this.renderDropDown()}
+        <Row>
+          <Col>
+            <ControlLabel>Asset</ControlLabel>
+            {this.renderDropDown()}
+          </Col>
+          <br />
+          <Col>
+            <ControlLabel>Amount</ControlLabel>
+            <FormControl
+              type="number"
+              inputRef={ el => this.userAmount=el}
+              onChange={this.getValidationState}
+              style={{backgroundColor: this.state.amountValidationColor}}
+            />
+          </Col>
+        </Row>
         <br />
-        
-          <ControlLabel>Amount</ControlLabel>
-          <FormControl
-            type="number"
-            inputRef={ el => this.userAmount=el}
-            onChange={this.getValidationState}
-            style={{backgroundColor: this.state.amountValidationColor}}
-          />
-          <FormControl.Feedback />
+        <Row>
+          <Col>
+            <ControlLabel>Your Wallet address</ControlLabel>
+            <FormControl
+              type="text"
+              inputRef={ el => this.walletAddress=el}
+              onChange={this.getValidationState}
+              style={{backgroundColor: this.state.walletAddressValidationColor}}
+            />
+          </Col>
+          <br />
+          <Col>
+            <ControlLabel>Expires on</ControlLabel> <br />
+            <FormControl 
+              type="date"
+              inputRef={ el => this.userDate=el}
+              onChange={this.getValidationState}
+              style={{backgroundColor: this.state.dateValidationColor}}
+            />
+          </Col>
+        </Row>
         <br />
-          <ControlLabel>Your Wallet address</ControlLabel>
-          <FormControl
-            type="text"
-          />
-          <FormControl.Feedback />
-        <br />
-  
-          <ControlLabel>Expires on</ControlLabel> <br />
-          <FormControl 
-            type="date"
-            inputRef={ el => this.userDate=el}
-            onChange={this.getValidationState}
-            style={{backgroundColor: this.state.dateValidationColor}}
-          />
-          <FormControl.Feedback />
-        </FormGroup>
-        <Button onClick={this.requestEscrow} style={{'cursor':'pointer', backgroundColor: this.state.buttonValidationColor}}> Request Escrow </Button>
+        <Row>
+          <Col>
+            <Button onClick={this.requestEscrow} style={{backgroundColor: this.state.buttonValidationColor}}> Request Escrow </Button>
+          </Col>
+          <Col>
+            <Button onClick={() => this.props.closeModal()}> Back </Button>
+          </Col>
+        </Row>
       </form>
-      
+    </Container>  
       );
-
   }
 
   renderReactModal = () =>{
@@ -246,8 +276,7 @@ class EscrowModal extends Component {
             }
           }}
         >
-          <Button onClick={() => this.props.closeModal()} style={{'cursor':'pointer', 'float':'right'}}> Close </Button>
-          <br />
+          
           <h1> New Escrow </h1>
           {this.renderBody()}
         </ReactModal>

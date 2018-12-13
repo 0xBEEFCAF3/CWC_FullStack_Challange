@@ -36,32 +36,14 @@ class DashboardContainer extends Component {
   componentDidUpdate(prevProps){
   }
  
-  renderReactModal = () =>{
-    return (
-      <ReactModal 
-          isOpen={this.state.modalBody !== null}
-          shouldCloseOnOverlayClick={false}
-          onRequestClose={() => this.setModalBody(null)}
-          style={{
-            content : {
-              backgroundColor: 'transparent',
-              border: 'none',
-            }
-          }}
-        >
-          <CloseIcon onClick={() => this.setModalBody(null)} style={{'cursor':'pointer', 'float':'right'}}/>
-          {this.state.modalBody}
-        </ReactModal>
-        );
-  }
-
+  
 
   render() {
     
     var _this = this;
     return (
       <DashboardWrapper className={`row`}>
-          {this.renderReactModal()}
+         
         <div className={`col-12`} >
           <DashboardBody className={`row`}>
             <EscrowTable />
